@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Turing Machine Simulator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="app">
+        <header id="header">
+            <div class="logo">
+                <div class="logo-icon">TM</div>
+                <div>
+                    <div class="logo-text">Turing Machine Simulator</div>
+                    <div class="logo-sub">Theory of Computation</div>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="status-pill idle" id="status-pill">
+                    <div class="s-dot"></div>
+                    <span id="status-text">Idle</span>
+                </div>
+            </div>
+        </header>
+
+        <div id="main">
+            <aside class="panel" id="left-panel">
+                <div class="ps">
+                    <div class="ps-title">Preset programs</div>
+                    <div class="ig">
+                        <label>Choose example</label>
+                        <select id="preset-sel">
+                            <option value="equal01">0ⁿ1ⁿ Checker — 0011</option>
+                            <option value="binc">Binary Increment — 1011</option>
+                            <option value="palin">Palindrome (a/b) — abba</option>
+                            <option value="bnot">Binary NOT — 1010</option>
+                            <option value="unary">Unary Increment — 111</option>
+                            <option value="copy">String Copy (0s) — 000</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="ps">
+                    <div class="ps-title">Input configuration</div>
+                    <div class="ig">
+                        <label>Tape input string</label>
+                        <input type="text" id="inp-tape" value="0011">
+                    </div>
+                    <div class="two-col">
+                        <div class="ig">
+                            <label>Initial state</label>
+                            <input type="text" id="inp-q0" value="q0">
+                        </div>
+                        <div class="ig">
+                            <label>Accept state</label>
+                            <input type="text" id="inp-acc" value="qA">
+                        </div>
+                    </div>
+                    <div class="ig">
+                        <label>Reject state</label>
+                        <input type="text" id="inp-rej" value="qR">
+                    </div>
+                </div>
+
+                <div class="ps">
+                    <div class="ps-title">Transition rules (JSON)</div>
+                    <div class="ig">
+                        <label>Format: [state, read, write, move, next]</label>
+                        <textarea id="rules-ed">[
+  ["q0","0","X","R","q1"],
+  ["q0","Y","Y","R","q4"],
+  ["q0","_","_","R","qA"],
+  ["q1","0","0","R","q1"],
+  ["q1","1","Y","L","q2"],
+  ["q1","Y","Y","R","q1"],
+  ["q2","0","0","L","q2"],
+  ["q2","X","X","R","q0"],
+  ["q2","Y","Y","L","q2"],
+  ["q4","Y","Y","R","q4"],
+  ["q4","_","_","R","qA"],
+  ["q0","1","1","R","qR"],
+  ["q1","_","_","R","qR"]
+]</textarea>
+                    </div>
+                </div>
+
+                <div class="ps">
+                    <div class="ps-title">Simulation controls</div>
+                    <div class="btn-row">
+                        <button class="btn-run" id="btn-run">▶ Run</button>
+                        <button class="btn-step" id="btn-step">⏭ Step</button>
+                        <button class="btn-reset" id="btn-reset">↺ Reset</button>
+                    </div>
+                    <div class="speed-row">
+                        <label>Speed</label>
+                        <input type="range" id="speed-sl" min="1" max="10" value="5" step="1">
+                        <span id="spd-val">5×</span>
+                    </div>
+                </div>
+            </aside>
+
+            <main id="center">
+                <div id="trans-bar">
+                    <div class="tb-block">
+                        <div class="tb-label">State</div>
+                        <div class="tb-val v-state" id="tb-state">q0</div>
+                    </div>
+                    <div class="tb-sep">,</div>
+                    <div class="tb-block">
+                        <div class="tb-label">Reading</div>
+                        <div class="tb-val v-sym" id="tb-sym">_</div>
+                    </div>
+                    <div class="tb-sep">→</div>
+                    <div class="tb-block">
+                        <div class="tb-label">Write</div>
+                        <div class="tb-val v-write" id="tb-write">—</div>
+                    </div>
+                    <div class="tb-sep">,</div>
+                    <div class="tb-block">
+                        <div class="tb-label">Move</div>
+                        <div class="tb-val v-dir" id="tb-dir">—</div>
+                    </div>
+                    <div class="tb-sep">→</div>
+                    <div class="tb-block">
+                        <div class="tb-label">Next</div>
+                        <div class="tb-val v-next" id="tb-next">—</div>
+                    </div>
+                </div>
+
+                <div id="tape-zone">
+                    <div class="tape-fade l"></div>
+                    <div class="tape-fade r"></div>
+                    <div id="head-arrow">▼</div>
+                    <div id="tape-scroll"></div>
+                    <div id="tape-pos-row"></div>
+                </div>
+
+                <div id="step-bar">
+                    <div class="sb-stat">
+                        <div class="sb-label">Steps</div>
+                        <div class="sb-val" id="sb-steps">0</div>
+                    </div>
+                    <div class="sb-stat">
+                        <div class="sb-label">Head pos</div>
+                        <div class="sb-val" id="sb-head" style="color:var(--yellow)">0</div>
+                    </div>
+                    <div id="loop-warn">⚠ Possible infinite loop</div>
+                </div>
+
+                <div id="halt-overlay">
+                    <div id="halt-modal">
+                        <div class="m-icon" id="m-icon">✅</div>
+                        <div class="m-title" id="m-title">Machine Halted</div>
+                        <p class="m-body" id="m-body">The machine accepted the input.</p>
+                        <button class="m-close" id="modal-close">Close</button>
+                    </div>
+                </div>
+            </main>
+
+            <aside class="panel" id="right-panel">
+                <div class="ps">
+                    <div class="ps-title">Runtime stats</div>
+                    <div class="rstat-grid">
+                        <div class="rstat">
+                            <div class="rl">State</div>
+                            <div class="rv run" id="rs-state">q0</div>
+                        </div>
+                        <div class="rstat">
+                            <div class="rl">Status</div>
+                            <div class="rv" id="rs-status">Ready</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="ps">
+                    <div class="ps-title">State Diagram</div>
+                    <svg id="state-svg" width="100%" viewBox="0 0 258 210"></svg>
+                </div>
+                <div class="ps">
+                    <div class="ps-title">Execution log</div>
+                    <div id="log-wrap" style="height:200px"></div>
+                </div>
+            </aside>
+        </div>
+
+        <footer id="footer">
+            <div class="fi"><strong>Blank:</strong> _</div>
+            <div class="fi"><strong>Move:</strong> L/R</div>
+        </footer>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>
