@@ -1,200 +1,195 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Turing Machine Simulator</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🧬 Turing Machine DNA Simulator</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
-    <div id="app">
-        <header id="header">
-            <div class="logo">
-                <div class="logo-icon">TM</div>
-                <div>
-                    <div class="logo-text">Turing Machine Simulator</div>
-                    <div class="logo-sub">Theory of Computation</div>
-                </div>
-            </div>
-            <div class="header-right">
-                <div class="status-pill idle" id="status-pill">
-                    <div class="s-dot"></div>
-                    <span id="status-text">Idle</span>
-                </div>
-            </div>
-        </header>
 
-        <div id="main">
-            <aside class="panel" id="left-panel">
-                <div class="ps">
-                    <div class="ps-title">Preset programs</div>
-                    <div class="ig">
-                        <label>Choose example</label>
-                        <select id="preset-sel">
-                            <option value="equal01">0ⁿ1ⁿ Checker — 0011</option>
-                            <option value="binc">Binary Increment — 1011</option>
-                            <option value="palin">Palindrome (a/b) — abba</option>
-                            <option value="bnot">Binary NOT — 1010</option>
-                            <option value="unary">Unary Increment — 111</option>
-                            <option value="copy">String Copy (0s) — 000</option>
-                        </select>
-                    </div>
-                </div>
+  <!-- Animated background grid -->
+  <div class="bg-grid"></div>
+  <div class="bg-particles" id="bgParticles"></div>
 
-                <div class="ps">
-                    <div class="ps-title">Input configuration</div>
-                    <div class="ig">
-                        <label>Tape input string</label>
-                        <input type="text" id="inp-tape" value="0011">
-                    </div>
-                    <div class="two-col">
-                        <div class="ig">
-                            <label>Initial state</label>
-                            <input type="text" id="inp-q0" value="q0">
-                        </div>
-                        <div class="ig">
-                            <label>Accept state</label>
-                            <input type="text" id="inp-acc" value="qA">
-                        </div>
-                    </div>
-                    <div class="ig">
-                        <label>Reject state</label>
-                        <input type="text" id="inp-rej" value="qR">
-                    </div>
-                </div>
-
-                <div class="ps">
-                    <div class="ps-title">Transition rules (JSON)</div>
-                    <div class="ig">
-                        <label>Format: [state, read, write, move, next]</label>
-                        <textarea id="rules-ed">[
-  ["q0","0","X","R","q1"],
-  ["q0","Y","Y","R","q4"],
-  ["q0","_","_","R","qA"],
-  ["q1","0","0","R","q1"],
-  ["q1","1","Y","L","q2"],
-  ["q1","Y","Y","R","q1"],
-  ["q2","0","0","L","q2"],
-  ["q2","X","X","R","q0"],
-  ["q2","Y","Y","L","q2"],
-  ["q4","Y","Y","R","q4"],
-  ["q4","_","_","R","qA"],
-  ["q0","1","1","R","qR"],
-  ["q1","_","_","R","qR"]
-]</textarea>
-                    </div>
-                </div>
-
-                <div class="ps">
-                    <div class="ps-title">Simulation controls</div>
-                    <div class="btn-row">
-                        <button class="btn-run" id="btn-run">▶ Run</button>
-                        <button class="btn-step" id="btn-step">⏭ Step</button>
-                        <button class="btn-reset" id="btn-reset">↺ Reset</button>
-                    </div>
-                    <div class="speed-row">
-                        <label>Speed</label>
-                        <input type="range" id="speed-sl" min="1" max="10" value="5" step="1">
-                        <span id="spd-val">5×</span>
-                    </div>
-                </div>
-            </aside>
-
-            <main id="center">
-                <div id="trans-bar">
-                    <div class="tb-block">
-                        <div class="tb-label">State</div>
-                        <div class="tb-val v-state" id="tb-state">q0</div>
-                    </div>
-                    <div class="tb-sep">,</div>
-                    <div class="tb-block">
-                        <div class="tb-label">Reading</div>
-                        <div class="tb-val v-sym" id="tb-sym">_</div>
-                    </div>
-                    <div class="tb-sep">→</div>
-                    <div class="tb-block">
-                        <div class="tb-label">Write</div>
-                        <div class="tb-val v-write" id="tb-write">—</div>
-                    </div>
-                    <div class="tb-sep">,</div>
-                    <div class="tb-block">
-                        <div class="tb-label">Move</div>
-                        <div class="tb-val v-dir" id="tb-dir">—</div>
-                    </div>
-                    <div class="tb-sep">→</div>
-                    <div class="tb-block">
-                        <div class="tb-label">Next</div>
-                        <div class="tb-val v-next" id="tb-next">—</div>
-                    </div>
-                </div>
-
-                <div id="tape-zone">
-                    <div class="tape-fade l"></div>
-                    <div class="tape-fade r"></div>
-                    <div id="head-arrow">▼</div>
-                    <div id="tape-scroll"></div>
-                    <div id="tape-pos-row"></div>
-                </div>
-
-                <div id="step-bar">
-                    <div class="sb-stat">
-                        <div class="sb-label">Steps</div>
-                        <div class="sb-val" id="sb-steps">0</div>
-                    </div>
-                    <div class="sb-stat">
-                        <div class="sb-label">Head pos</div>
-                        <div class="sb-val" id="sb-head" style="color:var(--yellow)">0</div>
-                    </div>
-                    <div id="loop-warn">⚠ Possible infinite loop</div>
-                </div>
-
-                <div id="halt-overlay">
-                    <div id="halt-modal">
-                        <div class="m-icon" id="m-icon">✅</div>
-                        <div class="m-title" id="m-title">Machine Halted</div>
-                        <p class="m-body" id="m-body">The machine accepted the input.</p>
-                        <button class="m-close" id="modal-close">Close</button>
-                    </div>
-                </div>
-            </main>
-
-            <aside class="panel" id="right-panel">
-                <div class="ps">
-                    <div class="ps-title">Runtime stats</div>
-                    <div class="rstat-grid">
-                        <div class="rstat">
-                            <div class="rl">State</div>
-                            <div class="rv run" id="rs-state">q0</div>
-                        </div>
-                        <div class="rstat">
-                            <div class="rl">Status</div>
-                            <div class="rv" id="rs-status">Ready</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="ps">
-                    <div class="ps-title">State Diagram</div>
-                    <svg id="state-svg" width="100%" viewBox="0 0 258 210"></svg>
-                </div>
-                <div class="ps">
-                    <div class="ps-title">Execution log</div>
-                    <div id="log-wrap" style="height:200px"></div>
-                </div>
-            </aside>
-        </div>
-
-        <footer id="footer">
-            <div class="fi"><strong>Blank:</strong> _</div>
-            <div class="fi"><strong>Move:</strong> L/R</div>
-        </footer>
+  <!-- ═══════════════════════════════════════════════ -->
+  <!-- HEADER                                          -->
+  <!-- ═══════════════════════════════════════════════ -->
+  <header class="app-header">
+    <div class="header-left">
+      <span class="helix-icon">⬡</span>
+      <div>
+        <h1 class="app-title">TURING MACHINE</h1>
+        <span class="app-subtitle">DNA MUTATION SIMULATOR</span>
+      </div>
     </div>
-    <script src="script.js"></script>
-</body>
+    <div class="header-right">
+      <span class="status-badge" id="statusBadge">IDLE</span>
+    </div>
+  </header>
 
+  <!-- ═══════════════════════════════════════════════ -->
+  <!-- MAIN LAYOUT                                     -->
+  <!-- ═══════════════════════════════════════════════ -->
+  <main class="app-layout">
+
+    <!-- ─────────────────── LEFT PANEL ─────────────────── -->
+    <aside class="panel panel-left">
+      <div class="panel-label">◈ INPUT &amp; CONTROLS</div>
+
+      <!-- DNA Input -->
+      <div class="section">
+        <label class="field-label">DNA SEQUENCE</label>
+        <div class="dna-input-wrap">
+          <input type="text" id="dnaInput" class="dna-input" maxlength="40"
+            placeholder="e.g. ATGCGT" value="ATGCGTAATC" spellcheck="false" />
+          <span class="input-icon">🧬</span>
+        </div>
+        <div class="input-hint">Symbols: A · T · G · C (max 40)</div>
+      </div>
+
+      <!-- Predefined Mutations -->
+      <div class="section">
+        <label class="field-label">PRESET MUTATION</label>
+        <select class="styled-select" id="presetSelect">
+          <option value="">— Choose a preset —</option>
+          <option value="complement">Complementary DNA (A↔T, G↔C)</option>
+          <option value="replaceAG">Replace all A → G</option>
+          <option value="reverse">Reverse Sequence</option>
+          <option value="custom">Custom Rules (JSON below)</option>
+        </select>
+      </div>
+
+      <!-- Rule Editor -->
+      <div class="section">
+        <label class="field-label">TRANSITION RULES <span class="label-hint">(state,read)→(newState,write,dir)</span></label>
+        <textarea id="ruleEditor" class="rule-editor" rows="7" spellcheck="false"
+          placeholder='{"q0,A":["q0","T","R"],...}'></textarea>
+        <div class="input-hint">Format: <code>{"q0,A":["q1","T","R"]}</code></div>
+      </div>
+
+      <!-- Speed Control -->
+      <div class="section">
+        <label class="field-label">SPEED  <span id="speedLabel" class="speed-val">400ms</span></label>
+        <input type="range" id="speedSlider" class="speed-slider" min="50" max="1000" value="400" step="50" />
+        <div class="speed-ends"><span>FAST</span><span>SLOW</span></div>
+      </div>
+
+      <!-- Buttons -->
+      <div class="btn-grid">
+        <button class="btn btn-run"   id="btnRun"   title="Run simulation">▶ RUN</button>
+        <button class="btn btn-step"  id="btnStep"  title="One step">⏭ STEP</button>
+        <button class="btn btn-pause" id="btnPause" title="Pause" disabled>⏸ PAUSE</button>
+        <button class="btn btn-reset" id="btnReset" title="Reset">↺ RESET</button>
+      </div>
+
+      <!-- Export -->
+      <div class="section" style="margin-top:auto; padding-top:8px;">
+        <button class="btn btn-export" id="btnExport">⬇ EXPORT RESULT</button>
+      </div>
+    </aside>
+
+    <!-- ─────────────────── CENTER PANEL ─────────────────── -->
+    <section class="panel panel-center">
+      <div class="panel-label">◈ DNA TAPE VISUALIZATION</div>
+
+      <!-- Tape area -->
+      <div class="tape-viewport" id="tapeViewport">
+        <div class="tape-track" id="tapeTrack">
+          <!-- cells injected by JS -->
+        </div>
+      </div>
+
+      <!-- Head indicator row -->
+      <div class="head-row" id="headRow">
+        <!-- arrow injected by JS -->
+      </div>
+
+      <!-- Mutation animation message -->
+      <div class="mutation-msg" id="mutationMsg"></div>
+
+      <!-- ── EDUCATIONAL SECTION ── -->
+      <div class="edu-section">
+        <div class="edu-title">⟨ WHAT IS THIS? ⟩</div>
+        <div class="edu-grid">
+          <div class="edu-card">
+            <div class="edu-icon">⊞</div>
+            <div class="edu-head">TURING MACHINE</div>
+            <div class="edu-body">A theoretical model of computation by Alan Turing (1936). It reads/writes symbols on an infinite tape using a rule table to decide its next action — the basis of all modern computers.</div>
+          </div>
+          <div class="edu-card">
+            <div class="edu-icon">⬡</div>
+            <div class="edu-head">DNA AS A TAPE</div>
+            <div class="edu-body">DNA is a linear sequence of nucleotides (A, T, G, C) — exactly like a Turing tape. The read/write head acts as an enzyme, scanning and mutating bases one at a time.</div>
+          </div>
+          <div class="edu-card">
+            <div class="edu-icon">⇌</div>
+            <div class="edu-head">TRANSITIONS = MUTATIONS</div>
+            <div class="edu-body">Each transition rule (state, symbol) → (new state, write, move) mimics a biological mutation event: reading a codon, substituting a base, then advancing along the strand.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────────────── RIGHT PANEL ─────────────────── -->
+    <aside class="panel panel-right">
+      <div class="panel-label">◈ EXECUTION INFO</div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">STATE</div>
+          <div class="stat-val" id="statState">q0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">STEP</div>
+          <div class="stat-val" id="statStep">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">HEAD POS</div>
+          <div class="stat-val" id="statHead">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">SYMBOL</div>
+          <div class="stat-val" id="statSymbol">—</div>
+        </div>
+      </div>
+
+      <!-- Applied rule -->
+      <div class="section">
+        <div class="field-label">LAST APPLIED RULE</div>
+        <div class="rule-display" id="ruleDisplay">
+          <span class="rule-none">— no rule applied yet —</span>
+        </div>
+      </div>
+
+      <!-- Status -->
+      <div class="section">
+        <div class="field-label">STATUS</div>
+        <div class="status-display" id="statusDisplay">
+          <span class="dot dot-idle"></span> READY TO RUN
+        </div>
+      </div>
+
+      <!-- Log -->
+      <div class="section log-section">
+        <div class="field-label">EXECUTION LOG
+          <button class="clear-log-btn" id="clearLog">CLEAR</button>
+        </div>
+        <div class="log-box" id="logBox">
+          <div class="log-entry log-info">▸ Simulator initialised. Load a preset or write custom rules.</div>
+        </div>
+      </div>
+
+      <!-- Final result -->
+      <div class="section">
+        <div class="field-label">RESULT SEQUENCE</div>
+        <div class="result-seq" id="resultSeq">—</div>
+      </div>
+    </aside>
+
+  </main>
+
+  <script src="script.js"></script>
+</body>
 </html>
